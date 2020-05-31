@@ -2,10 +2,12 @@ from mnist import MNIST
 import randomforest
 from random import seed
 from math import sqrt
+from time import time
 
 if __name__ == '__main__':
 
     # Dane w katalogu "samples"
+    start = time()
     mndata = MNIST('samples')
 
     # wczytanie danych
@@ -39,13 +41,15 @@ if __name__ == '__main__':
     łacze klasy (cyfry - labels) z atrybutami 
     czyli teraz mam 785 atrybutów gdzie ostatnim jest klasa
     """
-
+    
     for i in range(len(labels)):
         images[i].append(labels[i])
 
     for i in range(len(imagest)):
         imagest[i].append(labelst[i])
- 
+    stop = time()
+    print(f"Przygotowanie danych: {(stop-start):0.3f}")
+
     """
     Długo się liczy więcv eybieram tylko część dla celów testowych jak działą
     """
@@ -71,7 +75,10 @@ if __name__ == '__main__':
     n_trees = [1, 31]
 
     for n_tree in n_trees:
+        start2 = time()
         accuracy = randomforest.runRandomForest(images, imagest, max_depth, min_size, sample_size, n_tree, n_features)
+        stop2 = time()
+        print(f"Czas wykonania algorytmu dla {n_tree} drzew wynosi {(stop2-start2):0.3f} sekund")
         print('Trees: %d' % n_tree)
         print('Accuracy: %.3f%%' % accuracy)
         # print('Mean Accuracy: %.3f%%' % (sum(scores) / float(len(scores))))

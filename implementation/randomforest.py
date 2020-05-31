@@ -1,5 +1,6 @@
 from random import randrange
 from math import log
+from time import time
 
 
 def splitByValue(feature, value, train_data):
@@ -67,9 +68,8 @@ def calcInf(feature_index, feature_value, images_set, groups):
     return Set_Entropy
 
 
-def calcInfGain(feature_index, feature_value, images_set, groups):
-    wynik = calcEntropy(images_set, getListOfUsedClasses(images_set))
-    wynik = wynik - calcInf(feature_index, feature_value, images_set, groups)
+def calcInfGain(feature_index, feature_value, images_set, groups, current_Entropy):
+    wynik = current_Entropy - calcInf(feature_index, feature_value, images_set, groups)
     return wynik
 
 
@@ -86,14 +86,14 @@ def chooseFeatures(images_set, n_features):
     while len(features) < n_features:
         index = randrange(len(images_set[0])-1)
         features.append(index)
-
+    current_Entropy = calcEntropy(images_set, getListOfUsedClasses(images_set))
     if(len(images_set) > 255):
         pixel_values = range(0, 255)
         for feature in features:
             for pixel_value in pixel_values:
                 # Dzieli zbiór obiektow na podstawie wybranych featureów
                 groups = splitByValue(feature, pixel_value, images_set)
-                InfGain = calcInfGain(feature, pixel_value, images_set, groups)
+                InfGain = calcInfGain(feature, pixel_value, images_set, groups, current_Entropy)
 
                 if InfGain > n_InfGain:
                     n_index, n_value, n_InfGain, n_groups = feature, pixel_value, InfGain, groups
@@ -102,13 +102,13 @@ def chooseFeatures(images_set, n_features):
             for image in images_set:
                 # Dzieli zbiór obiektow na podstawie wybranych featureów
                 groups = splitByValue(feature, image[feature], images_set)
-                InfGain = calcInfGain(feature, image[feature], images_set, groups)
+                InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
 
                 if InfGain > n_InfGain:
                     n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
     
     # Return a dictionary
-    return {'index': n_index, 'value': n_value, 'InfGain': n_InfGain, 'groups': n_groups}
+    return {'index': n_index, 'value': n_value, 'groups': n_groups}
 
 
 def split(node, max_depth, min_size, n_features, depth):
@@ -146,10 +146,16 @@ def split(node, max_depth, min_size, n_features, depth):
 
 
 def buidTree(train_images, max_depth, min_size, n_features):
+    start1 = time()
     # tworzy korzeń
+    start2 = time()
     root = chooseFeatures(train_images, n_features)
+    stop2 = time()
     # Tworzy węzły dzieci
     split(root, max_depth, min_size, n_features, 1)
+    stop1 = time()
+    print(f"Tworzenie jednego drzewa: {(stop1-start1):0.3f}")
+    print(f"Wybor atrybutu i podzial dla root: {(stop2-start2):0.3f}")
     return root
 
 
@@ -207,6 +213,7 @@ def RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_tree
     ogólnie algorytm najpierw tworzy las losowy na podstawie zbioru treningowego
     a potem zwraca predykcje dla zbioru testowego
     """
+    start1 = time()
     trees = list()
     for i in range(n_trees):
         if(sample_size<1.0):
@@ -215,7 +222,12 @@ def RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_tree
             sample_image=train_data
         tree=buidTree(sample_image,max_depth,min_size,n_features)
         trees.append(tree)
-    predictions=[calcPrediction(trees,row)for row in test_data]
+    stop1 = time()
+    print(f"Tworzenie aktualnekj liczby drzew: {(stop1-start1):0.3f}")
+    start2 = time()
+    predictions = [calcPrediction(trees,row)for row in test_data]
+    stop2 = time()
+    print(f"Predykcja zajela: {(stop2-start2):0.3f}")
     return predictions
 
 
@@ -224,6 +236,9 @@ def runRandomForest(train_data, test_data, max_depth, min_size, sample_size, n_t
     Funkcja wywołuje las losowy i liczy celność predykcji którą potem zwraca
     """
     pred=RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features)
+    start = time()
     actual=[row[-1]for row in test_data]
     accuracy=calcAccuracy(actual,pred)
+    stop = time()
+    print(f"Czas liczenia dokladnosci: {(stop-start):0.3f} sekund")
     return accuracy

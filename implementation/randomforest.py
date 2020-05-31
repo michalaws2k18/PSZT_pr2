@@ -29,7 +29,7 @@ def calcAccuracy(lista_prawdziwych_klas, lista_przewidywanych_klas):
 
 def createTerminal(grupa):
     """
-    Sporśród grupy obiektów "grupa" wybiera klasę najczęstszą i tworzy stan terminalny, liśc
+    Spośród grupy obiektów "grupa" wybiera klasę najczęstszą i tworzy stan terminalny, liśc
     """
     wyjscia = [row[-1]for row in grupa]
     return max(set(wyjscia), key=wyjscia.count)
@@ -56,8 +56,7 @@ def calcEntropy(images_set, class_values):
     return Entropy
 
 
-def calcInf(feature_index, feature_value, images_set):
-    groups = splitByValue(feature_index, feature_value, images_set)
+def calcInf(feature_index, feature_value, images_set, groups):
     Set_Entropy = 0
     for group in groups:
         if len(group) == 0:
@@ -68,35 +67,13 @@ def calcInf(feature_index, feature_value, images_set):
     return Set_Entropy
 
 
-def calcInfGain(feature_index, feature_value, images_set):
+def calcInfGain(feature_index, feature_value, images_set, groups):
     wynik = calcEntropy(images_set, getListOfUsedClasses(images_set))
-    wynik = wynik - calcInf(feature_index, feature_value, images_set)
+    wynik = wynik - calcInf(feature_index, feature_value, images_set, groups)
     return wynik
 
 
-
-# def calcGiniIndex(groups, class_values):
-#     """
-#     Liczy liczy indeks Giniego aby dobrać optymalną wartość podziału dla wybranego atrybutu 
-#     Najlepiej jak indeks Giniego jest bliski 0
-#     class_value - to wszystkie klasy w danym zbiorze obiektów
-#     Ogólnie on to robi dla każdej danej propozycji podziału
-#     """
-#     size0=float(len(groups[0]))
-#     size1=float(len(groups[1]))
-#     gini=0
-#     for group in groups:
-#         if len(group)==0:
-#             continue
-#         gini_group=0
-#         for class_value in class_values:
-#             proportion=[row[-1] for row in group].count(class_value)/float(len(group))
-#             gini_group+=(proportion*(1.0-proportion))
-#         gini+=gini_group
-#     return gini
-
-
-def chooseFeatures(images, n_features):
+def chooseFeatures(images_set, n_features):
     """
     Wybiera atrybut ,jego wartość według którego podział zbioeu treningowego jest najlespzy 
     - największy indeks giniego
@@ -106,20 +83,32 @@ def chooseFeatures(images, n_features):
     # class_values = list(set([row[-1] for row in images]))
     # Sample of all features for random forest
     features = list()
-    while len(features) < n_features: 
-        index = randrange(len(images[0])-1)
+    while len(features) < n_features:
+        index = randrange(len(images_set[0])-1)
         features.append(index)
-    for feature in features:
-        for image in images:
-            # Dzieli zbiór obiektow na podstawie wybranych featureów
-            groups = splitByValue(feature, image[feature], images)
-            InfGain = calcInfGain(feature, image[feature], images)
 
-            if InfGain > n_InfGain:
-                n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
+    if(len(images_set) > 255):
+        pixel_values = range(0, 255)
+        for feature in features:
+            for pixel_value in pixel_values:
+                # Dzieli zbiór obiektow na podstawie wybranych featureów
+                groups = splitByValue(feature, pixel_value, images_set)
+                InfGain = calcInfGain(feature, pixel_value, images_set, groups)
+
+                if InfGain > n_InfGain:
+                    n_index, n_value, n_InfGain, n_groups = feature, pixel_value, InfGain, groups
+    else:
+        for feature in features:
+            for image in images_set:
+                # Dzieli zbiór obiektow na podstawie wybranych featureów
+                groups = splitByValue(feature, image[feature], images_set)
+                InfGain = calcInfGain(feature, image[feature], images_set, groups)
+
+                if InfGain > n_InfGain:
+                    n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
     
     # Return a dictionary
-    return {'index': n_index, 'value': n_value, 'groups': n_groups}
+    return {'index': n_index, 'value': n_value, 'InfGain': n_InfGain, 'groups': n_groups}
 
 
 def split(node, max_depth, min_size, n_features, depth):
@@ -170,14 +159,14 @@ def predict(node, row):
     funkcja rekurecyjna dla każdego weżła w drzewie 
     startuje od root
     """
-    if row[node["index"]]<node["value"]:
+    if row[node["index"]] < node["value"]:
         if isinstance(node['left'],dict):
-            return predict(node['left'],row)
+            return predict(node['left'] , row)
         else:
             return node['left']
     else:
-        if isinstance(node['right'],dict):
-            return predict(node['right'],row)
+        if isinstance(node['right'] , dict):
+            return predict(node['right'], row)
         else:
             return node['right']
 

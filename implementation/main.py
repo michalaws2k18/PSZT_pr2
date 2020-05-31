@@ -62,12 +62,13 @@ if __name__ == '__main__':
 
     seed(1)
     # n_folds = 3 #k- walidacja testowa
-    max_depth = 800 #Maximum allowable depth of tree
-    min_size = 1 #Minimalny rozmiar węzła to znaczy że może z niego zrobić liść( węzęł terminalny jak jest w nmim mniej niż "min_size" obiektów)
+    max_depth = 50 #Maximum allowable depth of tree
+    min_size = 2 #Minimalny rozmiar węzła to znaczy że może z niego zrobić liść( węzęł terminalny jak jest w nmim mniej niż "min_size" obiektów)
     sample_size = 0.7 #Część zbioru jaka będzie brana pod uwagę do budowy drzewa decyzyjnego
     n_features = int(sqrt(len(images[0])-1)) #liczba atrybutów jakie będą wybierane do budowy drzewa (28)
     # n_trees = [1, 5, 40] #Liczba drzew decyzyjnych w lesie losowym
-    n_trees = [1, int(sqrt(len(images)))]
+    # n_trees = [1, int(sqrt(len(images)))]
+    n_trees = [1, 31]
 
     for n_tree in n_trees:
         accuracy = randomforest.runRandomForest(images, imagest, max_depth, min_size, sample_size, n_tree, n_features)

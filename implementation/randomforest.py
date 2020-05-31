@@ -1,4 +1,5 @@
 from random import randrange
+from math import log
 
 
 def splitByValue(feature, value, train_data):
@@ -34,32 +35,65 @@ def createTerminal(grupa):
     return max(set(wyjscia), key=wyjscia.count)
 
 
-def calcEntropy(subset, labels):
-    """ 
-    Możńa spróbować liczyć entropię zamist indeksu giniego
-    """
-    pass
+def getListOfUsedClasses(images_set):
+    class_values = list(set([image[-1] for image in images_set]))
+    return class_values
 
 
-def calcGiniIndex(groups, class_values):
-    """
-    Liczy liczy indeks Giniego aby dobrać optymalną wartość podziału dla wybranego atrybutu 
-    Najlepiej jak indeks Giniego jest bliski 0
-    class_value - to wszystkie klasy w danym zbiorze obiektów
-    Ogólnie on to robi dla każdej danej propozycji podziału
-    """
-    size0=float(len(groups[0]))
-    size1=float(len(groups[1]))
-    gini=0
+def clacOccurrenceFrequency(images_set, class_value):
+    classes = [image[-1] for image in images_set]
+    wynik = classes.count(class_value)
+    wynik = wynik/len(images_set)
+    return wynik
+
+
+def calcEntropy(images_set, class_values):
+    Entropy = 0
+    for class_value in class_values:
+        fc = clacOccurrenceFrequency(images_set, class_value)
+        Entropy += fc*log(fc)
+    Entropy = -Entropy
+    return Entropy
+
+
+def calcInf(feature_index, feature_value, images_set):
+    groups = splitByValue(feature_index, feature_value, images_set)
+    Set_Entropy = 0
     for group in groups:
-        if len(group)==0:
+        if len(group) == 0:
             continue
-        gini_group=0
-        for class_value in class_values:
-            proportion=[row[-1] for row in group].count(class_value)/float(len(group))
-            gini_group+=(proportion*(1.0-proportion))
-        gini+=gini_group
-    return gini
+        class_values = getListOfUsedClasses(group)
+        iloczyn = (len(group)/len(images_set))*calcEntropy(group, class_values)
+        Set_Entropy += iloczyn
+    return Set_Entropy
+
+
+def calcInfGain(feature_index, feature_value, images_set):
+    wynik = calcEntropy(images_set, getListOfUsedClasses(images_set))
+    wynik = wynik - calcInf(feature_index, feature_value, images_set)
+    return wynik
+
+
+
+# def calcGiniIndex(groups, class_values):
+#     """
+#     Liczy liczy indeks Giniego aby dobrać optymalną wartość podziału dla wybranego atrybutu 
+#     Najlepiej jak indeks Giniego jest bliski 0
+#     class_value - to wszystkie klasy w danym zbiorze obiektów
+#     Ogólnie on to robi dla każdej danej propozycji podziału
+#     """
+#     size0=float(len(groups[0]))
+#     size1=float(len(groups[1]))
+#     gini=0
+#     for group in groups:
+#         if len(group)==0:
+#             continue
+#         gini_group=0
+#         for class_value in class_values:
+#             proportion=[row[-1] for row in group].count(class_value)/float(len(group))
+#             gini_group+=(proportion*(1.0-proportion))
+#         gini+=gini_group
+#     return gini
 
 
 def chooseFeatures(images, n_features):
@@ -68,8 +102,8 @@ def chooseFeatures(images, n_features):
     - największy indeks giniego
     Zwraca w postaci słownika
     """
-    b_index, b_value, b_score, b_groups = 999, 999, 999, None # deklaracja żeby było do czego porównać 
-    class_values = list(set([row[-1] for row in images]))
+    n_index, n_value, n_InfGain, n_groups = 999, 999, float('-inf'), None # deklaracja żeby było do czego porównać 
+    # class_values = list(set([row[-1] for row in images]))
     # Sample of all features for random forest
     features = list()
     while len(features) < n_features: 
@@ -79,13 +113,13 @@ def chooseFeatures(images, n_features):
         for image in images:
             # Dzieli zbiór obiektow na podstawie wybranych featureów
             groups = splitByValue(feature, image[feature], images)
-            gini = calcGiniIndex(groups, class_values)
+            InfGain = calcInfGain(feature, image[feature], images)
 
-            if gini < b_score:
-                b_index, b_value, b_score, b_groups = feature, image[feature], gini, groups
+            if InfGain > n_InfGain:
+                n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
     
     # Return a dictionary
-    return {'index': b_index, 'value': b_value, 'groups': b_groups}
+    return {'index': n_index, 'value': n_value, 'groups': n_groups}
 
 
 def split(node, max_depth, min_size, n_features, depth):
@@ -188,6 +222,8 @@ def RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_tree
     for i in range(n_trees):
         if(sample_size<1.0):
             sample_image = getSubset(train_data, sample_size)
+        else:
+            sample_image=train_data
         tree=buidTree(sample_image,max_depth,min_size,n_features)
         trees.append(tree)
     predictions=[calcPrediction(trees,row)for row in test_data]

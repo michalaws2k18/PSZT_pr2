@@ -146,16 +146,16 @@ def split(node, max_depth, min_size, n_features, depth):
 
 
 def buidTree(train_images, max_depth, min_size, n_features):
-    start1 = time()
+    # start1 = time()
     # tworzy korzeń
-    start2 = time()
+    # start2 = time()
     root = chooseFeatures(train_images, n_features)
-    stop2 = time()
+    # stop2 = time()
     # Tworzy węzły dzieci
     split(root, max_depth, min_size, n_features, 1)
-    stop1 = time()
-    print(f"Tworzenie jednego drzewa: {(stop1-start1):0.3f}")
-    print(f"Wybor atrybutu i podzial dla root: {(stop2-start2):0.3f}")
+    # stop1 = time()
+    # print(f"Tworzenie jednego drzewa: {(stop1-start1):0.3f}")
+    # print(f"Wybor atrybutu i podzial dla root: {(stop2-start2):0.3f}")
     return root
 
 
@@ -213,21 +213,21 @@ def RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_tree
     ogólnie algorytm najpierw tworzy las losowy na podstawie zbioru treningowego
     a potem zwraca predykcje dla zbioru testowego
     """
-    start1 = time()
+    # start1 = time()
     trees = list()
     for i in range(n_trees):
-        if(sample_size<1.0):
+        if(sample_size < 1.0):
             sample_image = getSubset(train_data, sample_size)
         else:
-            sample_image=train_data
-        tree=buidTree(sample_image,max_depth,min_size,n_features)
+            sample_image = train_data
+        tree = buidTree(sample_image, max_depth, min_size, n_features)
         trees.append(tree)
-    stop1 = time()
-    print(f"Tworzenie aktualnekj liczby drzew: {(stop1-start1):0.3f}")
-    start2 = time()
+    # stop1 = time()
+    # print(f"Tworzenie aktualnekj liczby drzew: {(stop1-start1):0.3f}")
+    # start2 = time()
     predictions = [calcPrediction(trees,row)for row in test_data]
-    stop2 = time()
-    print(f"Predykcja zajela: {(stop2-start2):0.3f}")
+    # stop2 = time()
+    # print(f"Predykcja zajela: {(stop2-start2):0.3f}")
     return predictions
 
 
@@ -236,9 +236,9 @@ def runRandomForest(train_data, test_data, max_depth, min_size, sample_size, n_t
     Funkcja wywołuje las losowy i liczy celność predykcji którą potem zwraca
     """
     pred=RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features)
-    start = time()
+    # start = time()
     actual=[row[-1]for row in test_data]
     accuracy=calcAccuracy(actual,pred)
-    stop = time()
-    print(f"Czas liczenia dokladnosci: {(stop-start):0.3f} sekund")
+    # stop = time()
+    # print(f"Czas liczenia dokladnosci: {(stop-start):0.3f} sekund")
     return accuracy

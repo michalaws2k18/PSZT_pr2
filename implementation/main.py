@@ -56,17 +56,8 @@ if __name__ == '__main__':
     images = images[:1000]
     imagest = imagest[:100]
 
-    """
-    Tutaj łączę jkbyśmy robili z k walidacją krzyżową 
-    """
-    # print(len(imagest[0]))
-    # for item in imagest:
-    #     images.append(item)
-    # print(len(images))
-
     seed(1)
-    # n_folds = 3 #k- walidacja testowa
-    max_depth = 50 #Maximum allowable depth of tree
+    max_depth = 50 #Maksymalna głebokość drzewa
     min_size = 2 #Minimalny rozmiar węzła to znaczy że może z niego zrobić liść( węzęł terminalny jak jest w nmim mniej niż "min_size" obiektów)
     sample_size = 0.7 #Część zbioru jaka będzie brana pod uwagę do budowy drzewa decyzyjnego
     n_features = int(sqrt(len(images[0])-1)) #liczba atrybutów jakie będą wybierane do budowy drzewa (28)
@@ -81,4 +72,3 @@ if __name__ == '__main__':
         print(f"Czas wykonania algorytmu dla {n_tree} drzew wynosi {(stop2-start2):0.3f} sekund")
         print('Trees: %d' % n_tree)
         print('Accuracy: %.3f%%' % accuracy)
-        # print('Mean Accuracy: %.3f%%' % (sum(scores) / float(len(scores))))

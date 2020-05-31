@@ -80,8 +80,7 @@ def chooseFeatures(images_set, n_features):
     Zwraca w postaci słownika
     """
     n_index, n_value, n_InfGain, n_groups = 999, 999, float('-inf'), None # deklaracja żeby było do czego porównać 
-    # class_values = list(set([row[-1] for row in images]))
-    # Sample of all features for random forest
+
     features = list()
     while len(features) < n_features:
         index = randrange(len(images_set[0])-1)

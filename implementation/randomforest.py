@@ -1,4 +1,4 @@
-from random import randrange
+from random import randrange, sample
 from math import log
 from time import time
 
@@ -30,7 +30,8 @@ def calcAccuracy(lista_prawdziwych_klas, lista_przewidywanych_klas):
 
 def createTerminal(grupa):
     """
-    Spośród grupy obiektów "grupa" wybiera klasę najczęstszą i tworzy stan terminalny, liśc
+    Spośród grupy obiektów "grupa" wybiera klasę najczęstszą
+    i tworzy stan terminalny, liśc
     """
     wyjscia = [row[-1]for row in grupa]
     return max(set(wyjscia), key=wyjscia.count)
@@ -81,10 +82,8 @@ def chooseFeatures(images_set, n_features):
     """
     n_index, n_value, n_InfGain, n_groups = 999, 999, float('-inf'), None # deklaracja żeby było do czego porównać 
 
-    features = list()
-    while len(features) < n_features:
-        index = randrange(len(images_set[0])-1)
-        features.append(index)
+    features = sample(range(len(images_set[0])-1), n_features)
+
     current_Entropy = calcEntropy(images_set, getListOfUsedClasses(images_set))
     if(len(images_set) > 255):
         pixel_values = range(0, 255)
@@ -105,7 +104,7 @@ def chooseFeatures(images_set, n_features):
 
                 if InfGain > n_InfGain:
                     n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
-    
+
     # Return a dictionary
     return {'index': n_index, 'value': n_value, 'groups': n_groups}
 

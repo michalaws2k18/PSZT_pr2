@@ -1,4 +1,4 @@
-from random import randrange, sample
+from random import randrange, sample, randint
 from math import log
 from time import time
 
@@ -97,6 +97,18 @@ def chooseFeatures(images_set, n_features):
                     n_index, n_value, n_InfGain, n_groups = feature, pixel_value, InfGain, groups
     else:
         for feature in features:
+            """
+            Wybór reprezentatywnej próbki z rozkładem jednostajnym
+            """
+            # image_index_tochoose = randint(0, len(images_set)-1)
+            # image=images_set[image_index_tochoose]
+            # groups = splitByValue(feature, image[feature], images_set)
+            # InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
+            # if InfGain > n_InfGain:
+            #     n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
+            """
+            Wybór próbki na podstawie wszystkich obrazków
+            """
             for image in images_set:
                 # Dzieli zbiór obiektow na podstawie wybranych featureów
                 groups = splitByValue(feature, image[feature], images_set)
@@ -240,3 +252,4 @@ def runRandomForest(train_data, test_data, max_depth, min_size, sample_size, n_t
     # stop = time()
     # print(f"Czas liczenia dokladnosci: {(stop-start):0.3f} sekund")
     return accuracy
+

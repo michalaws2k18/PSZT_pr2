@@ -1,6 +1,7 @@
 from random import randrange, sample, randint
 from math import log
 from time import time
+from copy import deepcopy
 
 
 def splitByValue(feature, value, train_data):
@@ -15,6 +16,18 @@ def splitByValue(feature, value, train_data):
         else:
             right.append(image)
     return left, right
+
+
+def k_validation_split(image_train, k):
+    size_of_subset = int(len(image_train)/k)
+    image_train_copy = deepcopy(image_train)
+    subsets = list()
+    for i in range(k):
+        subset = list()
+        while len(subset) < size_of_subset:
+            subset.append(image_train_copy.pop(randrange(len(image_train_copy))))
+        subsets.append(subset)
+    return subsets
 
 
 def calcAccuracy(lista_prawdziwych_klas, lista_przewidywanych_klas):
@@ -100,22 +113,22 @@ def chooseFeatures(images_set, n_features):
             """
             Wybór reprezentatywnej próbki z rozkładem jednostajnym
             """
-            # image_index_tochoose = randint(0, len(images_set)-1)
-            # image=images_set[image_index_tochoose]
-            # groups = splitByValue(feature, image[feature], images_set)
-            # InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
-            # if InfGain > n_InfGain:
-            #     n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
+            image_index_tochoose = randint(0, len(images_set)-1)
+            image=images_set[image_index_tochoose]
+            groups = splitByValue(feature, image[feature], images_set)
+            InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
+            if InfGain > n_InfGain:
+                n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
             """
             Wybór próbki na podstawie wszystkich obrazków
             """
-            for image in images_set:
-                # Dzieli zbiór obiektow na podstawie wybranych featureów
-                groups = splitByValue(feature, image[feature], images_set)
-                InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
+            # for image in images_set:
+            #     # Dzieli zbiór obiektow na podstawie wybranych featureów
+            #     groups = splitByValue(feature, image[feature], images_set)
+            #     InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
 
-                if InfGain > n_InfGain:
-                    n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
+            #     if InfGain > n_InfGain:
+            #         n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
 
     # Return a dictionary
     return {'index': n_index, 'value': n_value, 'groups': n_groups}
@@ -209,7 +222,6 @@ def calcPrediction(trees, row):
     predictions = [predict(tree, row) for tree in trees]
     return max(set(predictions), key=predictions.count)
 
-
 def RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features):
     """
     Funkcja lasu loswego Train_data - obiekty treningowe
@@ -219,7 +231,6 @@ def RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_tree
     sample_size - współczynnik ilości obiektów ze zbioru treningowego, które zostaną wzięte pod uwagę podczas budowy drzewa
     n_trees - liczba drzew decyzyjnych w lesie losowym
     n_features - liczba atrybutów brana pod uwagę podczas wyboru podziału w węźle, według wykłądu pierwiastek z ich całkowitej liczby - czyli 28
-
     ogólnie algorytm najpierw tworzy las losowy na podstawie zbioru treningowego
     a potem zwraca predykcje dla zbioru testowego
     """
@@ -241,15 +252,47 @@ def RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_tree
     return predictions
 
 
-def runRandomForest(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features):
+def RandomForestwithValidation(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features, k_validation):
+    """
+    Funkcja analogiczna do runRandomForest tylko wykonuje to razem z k-krotną walidacją
+    """
+    subsets = k_validation_split(train_data, k_validation)
+    subsets_accuracy = list()
+    k_models = list()
+    for subset in subsets:
+        train_set = list(subsets)
+        train_set.remove(subset)
+        train_set = sum(train_set, [])
+
+        trees = list()
+        for i in range(n_trees):
+            if(sample_size < 1.0):
+                sample_image = getSubset(train_set, sample_size)
+            else:
+                sample_image = train_data
+            tree = buidTree(sample_image, max_depth, min_size, n_features)
+            trees.append(tree)
+        k_models.append(trees)
+        predictions = [calcPrediction(trees, row)for row in subset]
+        true_digits = [row[-1]for row in subset]
+        accuracy = calcAccuracy(true_digits, predictions)
+        subsets_accuracy.append(accuracy)
+    the_best_index = subsets_accuracy.index(max(subsets_accuracy))
+    predictions_test = [calcPrediction(k_models[the_best_index], row)for row in test_data]
+    true_digits = [row[-1]for row in test_data]
+    accuracy = calcAccuracy(true_digits, predictions_test)
+    subsets_accuracy.append(accuracy)
+    return subsets_accuracy
+
+
+def runRandomForest(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features, k_validation):
     """
     Funkcja wywołuje las losowy i liczy celność predykcji którą potem zwraca
     """
-    pred=RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features)
+    pred=RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features, k_validation)
     # start = time()
     actual=[row[-1]for row in test_data]
     accuracy=calcAccuracy(actual,pred)
     # stop = time()
     # print(f"Czas liczenia dokladnosci: {(stop-start):0.3f} sekund")
     return accuracy
-

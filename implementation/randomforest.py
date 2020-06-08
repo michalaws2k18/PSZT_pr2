@@ -113,22 +113,22 @@ def chooseFeatures(images_set, n_features):
             """
             Wybór reprezentatywnej próbki z rozkładem jednostajnym
             """
-            image_index_tochoose = randint(0, len(images_set)-1)
-            image=images_set[image_index_tochoose]
-            groups = splitByValue(feature, image[feature], images_set)
-            InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
-            if InfGain > n_InfGain:
-                n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
+            # image_index_tochoose = randint(0, len(images_set)-1)
+            # image=images_set[image_index_tochoose]
+            # groups = splitByValue(feature, image[feature], images_set)
+            # InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
+            # if InfGain > n_InfGain:
+            #     n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
             """
             Wybór próbki na podstawie wszystkich obrazków
             """
-            # for image in images_set:
-            #     # Dzieli zbiór obiektow na podstawie wybranych featureów
-            #     groups = splitByValue(feature, image[feature], images_set)
-            #     InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
+            for image in images_set:
+                # Dzieli zbiór obiektow na podstawie wybranych featureów
+                groups = splitByValue(feature, image[feature], images_set)
+                InfGain = calcInfGain(feature, image[feature], images_set, groups, current_Entropy)
 
-            #     if InfGain > n_InfGain:
-            #         n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
+                if InfGain > n_InfGain:
+                    n_index, n_value, n_InfGain, n_groups = feature, image[feature], InfGain, groups
 
     # Return a dictionary
     return {'index': n_index, 'value': n_value, 'groups': n_groups}
@@ -222,6 +222,16 @@ def calcPrediction(trees, row):
     predictions = [predict(tree, row) for tree in trees]
     return max(set(predictions), key=predictions.count)
 
+def predictAllset(model, test_data):
+    """
+    Predykcja dla całego zbioru testowego
+    """
+    predictions = [calcPrediction(model, row)for row in test_data]
+    true_digits = [row[-1]for row in test_data]
+    accuracy = calcAccuracy(true_digits, predictions)
+    return predictions, accuracy
+
+
 def RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features):
     """
     Funkcja lasu loswego Train_data - obiekty treningowe
@@ -252,7 +262,7 @@ def RandomForest(train_data, test_data, max_depth, min_size, sample_size, n_tree
     return predictions
 
 
-def RandomForestwithValidation(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features, k_validation):
+def RandomForestwithValidation(train_data, max_depth, min_size, sample_size, n_trees, n_features, k_validation):
     """
     Funkcja analogiczna do runRandomForest tylko wykonuje to razem z k-krotną walidacją
     """
@@ -278,11 +288,7 @@ def RandomForestwithValidation(train_data, test_data, max_depth, min_size, sampl
         accuracy = calcAccuracy(true_digits, predictions)
         subsets_accuracy.append(accuracy)
     the_best_index = subsets_accuracy.index(max(subsets_accuracy))
-    predictions_test = [calcPrediction(k_models[the_best_index], row)for row in test_data]
-    true_digits = [row[-1]for row in test_data]
-    accuracy = calcAccuracy(true_digits, predictions_test)
-    subsets_accuracy.append(accuracy)
-    return subsets_accuracy
+    return subsets_accuracy, k_models[the_best_index]
 
 
 def runRandomForest(train_data, test_data, max_depth, min_size, sample_size, n_trees, n_features, k_validation):

@@ -57,18 +57,22 @@ if __name__ == '__main__':
     imagest = imagest[:100]
 
     seed(1)
-    max_depth = 50 #Maksymalna głebokość drzewa
-    min_size = 2 #Minimalny rozmiar węzła to znaczy że może z niego zrobić liść( węzęł terminalny jak jest w nmim mniej niż "min_size" obiektów)
-    sample_size = 0.7 #Część zbioru jaka będzie brana pod uwagę do budowy drzewa decyzyjnego
+    max_depth = 50  # Maksymalna głebokość drzewa
+    min_size = 10  # Minimalny rozmiar węzła to znaczy że może z niego zrobić liść( węzęł terminalny jak jest w nmim mniej niż "min_size" obiektów)
+    sample_size = 0.6  # Część zbioru jaka będzie brana pod uwagę do budowy drzewa decyzyjnego
     n_features = int(sqrt(len(images[0])-1)) #liczba atrybutów jakie będą wybierane do budowy drzewa (28)
     # n_trees = [1, 5, 40] #Liczba drzew decyzyjnych w lesie losowym
     # n_trees = [1, int(sqrt(len(images)))]
-    n_trees = [1, 31]
+    n_trees = [1, 20]
+    k_validation = 4
 
     for n_tree in n_trees:
         start2 = time()
-        accuracy = randomforest.runRandomForest(images, imagest, max_depth, min_size, sample_size, n_tree, n_features)
+        accuracy_list = randomforest.RandomForestwithValidation(images, imagest, max_depth, min_size, sample_size, n_tree, n_features, k_validation)
+        Test_accuracy = accuracy_list.pop(-1)
+        mean_accuracy= sum(accuracy_list)/k_validation
         stop2 = time()
-        print(f"Czas wykonania algorytmu dla {n_tree} drzew wynosi {(stop2-start2):0.3f} sekund")
         print('Trees: %d' % n_tree)
-        print('Accuracy: %.3f%%' % accuracy)
+        print('Accuracy: %.3f%%' % Test_accuracy)
+        print('Mean Accuracy: %.3f%%' % mean_accuracy)
+        print(f"Czas wykonania algorytmu dla {n_tree} drzew wynosi {(stop2-start2):0.3f} sekund")

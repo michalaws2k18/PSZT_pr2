@@ -53,17 +53,17 @@ if __name__ == '__main__':
     """
     Długo się liczy więcv eybieram tylko część dla celów testowych jak działą
     """
-    images = images[:1000]
-    imagest = imagest[:100]
+    images = images[:5000]
+    imagest = imagest[:1000]
 
     seed(1)
     max_depth = 50  # Maksymalna głebokość drzewa
-    min_size = 10  # Minimalny rozmiar węzła to znaczy że może z niego zrobić liść( węzęł terminalny jak jest w nmim mniej niż "min_size" obiektów)
+    min_size = 100  # Minimalny rozmiar węzła to znaczy że może z niego zrobić liść( węzęł terminalny jak jest w nmim mniej niż "min_size" obiektów)
     sample_size = 0.6  # Część zbioru jaka będzie brana pod uwagę do budowy drzewa decyzyjnego
     n_features = int(sqrt(len(images[0])-1))  #liczba atrybutów jakie będą wybierane do budowy drzewa (28)
     # n_trees = [1, 5, 40] #Liczba drzew decyzyjnych w lesie losowym
     # n_trees = [1, int(sqrt(len(images)))]
-    n_trees = [1, 20]
+    n_trees = [1, 5, 10, 25, 50]
     k_validation = 4
 
     for n_tree in n_trees:

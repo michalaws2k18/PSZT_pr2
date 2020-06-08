@@ -1,5 +1,5 @@
 from mnist import MNIST
-import randomforest
+from randomforest import RandomForestwithValidation, runRandomForest, RandomForest, predictAllset
 from random import seed
 from math import sqrt
 from time import time
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     max_depth = 50  # Maksymalna głebokość drzewa
     min_size = 10  # Minimalny rozmiar węzła to znaczy że może z niego zrobić liść( węzęł terminalny jak jest w nmim mniej niż "min_size" obiektów)
     sample_size = 0.6  # Część zbioru jaka będzie brana pod uwagę do budowy drzewa decyzyjnego
-    n_features = int(sqrt(len(images[0])-1)) #liczba atrybutów jakie będą wybierane do budowy drzewa (28)
+    n_features = int(sqrt(len(images[0])-1))  #liczba atrybutów jakie będą wybierane do budowy drzewa (28)
     # n_trees = [1, 5, 40] #Liczba drzew decyzyjnych w lesie losowym
     # n_trees = [1, int(sqrt(len(images)))]
     n_trees = [1, 20]
@@ -68,11 +68,11 @@ if __name__ == '__main__':
 
     for n_tree in n_trees:
         start2 = time()
-        accuracy_list = randomforest.RandomForestwithValidation(images, imagest, max_depth, min_size, sample_size, n_tree, n_features, k_validation)
-        Test_accuracy = accuracy_list.pop(-1)
-        mean_accuracy= sum(accuracy_list)/k_validation
+        accuracy_validation, best_model = RandomForestwithValidation(images, max_depth, min_size, sample_size, n_tree, n_features, k_validation)
+        predictions, accuracy = predictAllset(best_model, imagest)
+        mean_accuracy = sum(accuracy_validation)/k_validation
         stop2 = time()
         print('Trees: %d' % n_tree)
-        print('Accuracy: %.3f%%' % Test_accuracy)
+        print('Accuracy: %.3f%%' % accuracy)
         print('Mean Accuracy: %.3f%%' % mean_accuracy)
         print(f"Czas wykonania algorytmu dla {n_tree} drzew wynosi {(stop2-start2):0.3f} sekund")

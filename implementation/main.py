@@ -3,9 +3,11 @@ from randomforest import RandomForestwithValidation, runRandomForest, RandomFore
 from random import seed
 from math import sqrt
 from time import time
+from zipfile import ZipFile
 
 if __name__ == '__main__':
-
+    with ZipFile('./samples/train-images-idx3-ubyte.zip', 'r') as zipObj:
+        zipObj.extractall('./samples')
     # Dane w katalogu "samples"
     start = time()
     mndata = MNIST('samples')
